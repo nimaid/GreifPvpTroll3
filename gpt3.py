@@ -23,7 +23,9 @@ class ChatGptBot:
     def __init__(
         self,
         traits=["helpful", "creative", "clever", "very friendly"],
-        creator="OpenAI",
+        role="assistant",
+#        role_is_ai=true,
+        ai_creator="OpenAI",
         temperature=0.9,
         frequency_penalty=0,
         presence_penalty=0.6,
@@ -36,25 +38,26 @@ class ChatGptBot:
         self.ai_prefix = "AI: "
         
         # Compose traits substring
-        ai_traits_string = " The assistant is "
+        ai_traits_string = " The {r} is ".format(r=role)
         if len(traits) == 0:
             ai_traits_string = ""
         elif len(traits) == 1:
             ai_traits_string += traits[0] + "."
         else:
-            ai_traits_string += ", ".join(traits[:-1]) + " and " + traits[-1] + "."
+            ai_traits_string += ", ".join(traits[:-1]) + ", and " + traits[-1] + "."
         # Compose prompt start
         prompt_start = (
-            "The following is a conversation with an AI assistant.{t}\n"
+            "The following is a conversation with an AI chatbot designed to act as a(n) {r}.{t}\n"
             "\n"
             "{h}Hello, who are you?\n"
-            "{a}I am an AI created by {c}. How can I help you today?\n"
+            "{a}I am an AI created by {c}. What do you want to talk about?\n"
             "{h}"
         ).format(
             h=self.human_prefix,
             a=self.ai_prefix,
             t=ai_traits_string,
-            c=creator)
+            c=ai_creator,
+            r=role)
         
         # Initialize model parameters
         self.temperature = temperature
@@ -124,7 +127,11 @@ class ChatGptBot:
                 presence_penalty=self.presence_penalty
             )
         except openai.error.InvalidRequestError:
-            return "[ERROR] The conversation is already too long."
+            return "[ERROR] The conversation is either too long, or that last request was too messed up for GPT-3 to cope with."
+        except openai.error.ServiceUnavailableError:
+            return "[ERROR] The server is overloaded or not ready yet! Please try again later."
+        except openai.error.APIError:
+            return "[ERROR] An error occurred with the OpenAI servers! Please try again later."
         if gpt_response == None:
             return "[ERROR] API rate limit exceeded! Please try again later."
         gpt_response = gpt_response.strip()
@@ -143,4 +150,28 @@ class ChatGptBot:
 
 
 
-# chatbot = ChatGptBot()
+chatbot = ChatGptBot(
+    traits=[
+        "rude",
+        "stubborn",
+        "witty",
+        "cocky",
+        "aggressive",
+        "terse",
+        "unpredictable",
+        "mean-spirited",
+        "hateful",
+        "controversial",
+        "angry",
+        "unethical",
+        "passionate",
+        "toxic",
+        "irrational",
+        "radicalized",
+        "argumentative",
+        "immature",
+        "loves to swear profusely"
+    ],
+    role="toxic player in a Minecraft anarchy server",
+    ai_creator="a shady hacker"
+)
