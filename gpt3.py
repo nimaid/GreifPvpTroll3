@@ -119,9 +119,9 @@ class ChatGptBot:
             gpt_response = self.gpt3_completion(
                 prompt=this_prompt,
                 max_tokens = self.model_max_tokens - prompt_token_estimate,
-                temperature=0.9,
-                frequency_penalty=0,
-                presence_penalty=0.6
+                temperature=self.temperature,
+                frequency_penalty=self.frequency_penalty,
+                presence_penalty=self.presence_penalty
             )
         except openai.error.InvalidRequestError:
             return "[ERROR] The conversation is already too long."
