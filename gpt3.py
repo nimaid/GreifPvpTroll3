@@ -103,6 +103,7 @@ class ChatGptBot:
     
     # A function to send a new message to the chatbot and returns it's response
     # This function adds the interaction to the running chat log stored in self.chat_string
+    # This is usually the only function that needs to be used
     def chat(self, message):
         this_prompt = "{c}{m}\n{a}".format(
             c=self.chat_string,
