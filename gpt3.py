@@ -47,7 +47,7 @@ class ChatGptBot:
             ai_traits_string += ", ".join(traits[:-1]) + ", and " + traits[-1] + "."
         # Compose prompt start
         prompt_start = (
-            "The following is a conversation with an AI chatbot designed to act as a(n) {r}.{t}\n"
+            "The following is a conversation with an AI chatbot designed to act as a(n) {r}.{t} The AI responds with messages that are less than 256 characters in length.\n"
             "\n"
             "{h}Hello, who are you?\n"
             "{a}I am an AI created by {c}. What do you want to talk about?\n"
