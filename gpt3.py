@@ -179,5 +179,5 @@ chatbot = ChatGptBot(
         "loves to swear profusely"
     ],
     role="offensive internet troll",
-    ai_creator="popbob"
+    ai_creator="the infamous transgender griefer named popbob"
 )
