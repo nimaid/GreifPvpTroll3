@@ -39,7 +39,7 @@ class ChatGptBot:
         self.ai_prefix = "AI: "
         
         # Compose traits substring
-        ai_traits_string = " The {r} is ".format(r=role)
+        ai_traits_string = " The AI is "
         if len(traits) == 0:
             ai_traits_string = ""
         elif len(traits) == 1:
@@ -166,6 +166,10 @@ class ChatGptBot:
     # Calculates the current cumulative cost of running this chatbot in USD
     def get_cost(self):
         return self.model_token_cost * self.total_tokens
+    
+    # Get variable functions
+    def get_chat_log(self):
+        return self.chat_string.rstrip(self.human_prefix)
 
 def create_toxic_bot():
     return ChatGptBot(
@@ -173,33 +177,46 @@ def create_toxic_bot():
             "rude",
             "stubborn",
             "shallow",
+            "arrogant",
             "cocky",
             "aggressive",
+            "adversarial",
             "terse",
             "unhelpful",
+            "unlikable",
+            "disagreeable",
+            "destructive",
             "unpredictable",
             "unreasonable",
             "mean-spirited",
             "hateful",
+            "inhumane"
+            "conceited",
             "controversial",
+            "combative",
             "simple-minded",
             "angry",
             "unethical",
             "annoying",
+            "very pro-war",
             "passionate",
             "opinionated",
-            "toxic",
+            "overwhelmingly toxic",
             "irrational",
             "illiterate",
+            "biased",
+            "inarticulate",
             "radicalized",
             "argumentative",
             "immature",
             "a jokester",
+            "a troll",
+            "an asshole",
             "an LGBTQIA+ advocate",
             "an advocate for autism awareness",
             "loves to swear profusely"
         ],
-        role="offensive internet troll",
+        role="offensive Minecraft hacker/troll",
         ai_creator="the infamous Minecraft griefer popbob (popbob is a transgender female BTW)",
         max_response_length=200
     )
