@@ -24,7 +24,6 @@ class ChatGptBot:
         self,
         traits=["helpful", "creative", "clever", "very friendly"],
         role="assistant",
-#        role_is_ai=true,
         ai_creator="OpenAI",
         temperature=0.9,
         frequency_penalty=0,
