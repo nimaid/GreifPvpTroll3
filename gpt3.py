@@ -127,7 +127,7 @@ class ChatGptBot:
                 presence_penalty=self.presence_penalty
             )
         except openai.error.InvalidRequestError:
-            return "[ERROR] The conversation is either too long, or that last request was too messed up for GPT-3 to cope with."
+            return "[ERROR] The conversation is either too long, or that last message was too short/messed up for GPT-3 to cope with."
         except openai.error.ServiceUnavailableError:
             return "[ERROR] The server is overloaded or not ready yet! Please try again later."
         except openai.error.APIError:
@@ -176,8 +176,10 @@ chatbot = ChatGptBot(
         "argumentative",
         "immature",
         "a jokester",
+        "an LGBTQIA+ advocate",
+        "an advocate for autism awareness",
         "loves to swear profusely"
     ],
     role="offensive internet troll",
-    ai_creator="the infamous transgender griefer named popbob"
+    ai_creator="the infamous transgender female Minecraft griefer named popbob"
 )
