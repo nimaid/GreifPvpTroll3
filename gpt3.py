@@ -1,6 +1,7 @@
 import math
 import openai
 import json
+from enum import Enum
 
 # Configuration filenames
 openai_creds_filename = "openai_creds.json"
@@ -25,6 +26,7 @@ class ChatGptBot:
         traits=["helpful", "creative", "clever", "very friendly"],
         role="assistant",
         ai_creator="OpenAI",
+        max_response_length=None,
         temperature=0.9,
         frequency_penalty=0,
         presence_penalty=0.6,
@@ -44,9 +46,18 @@ class ChatGptBot:
             ai_traits_string += traits[0] + "."
         else:
             ai_traits_string += ", ".join(traits[:-1]) + ", and " + traits[-1] + "."
+        # Compose response length substring
+        length_substring = " The AI responds with messages that are less than {l} characters in length."
+        if max_response_length == None:
+            length_substring = ""
+        else:
+            if max_response_length <= 0:
+                length_substring = ""
+            else:
+                length_substring = length_substring.format(l=max_response_length)
         # Compose prompt start
         prompt_start = (
-            "The following is a conversation with an AI chatbot designed to act as a(n) {r}.{t} The AI responds with messages that are less than 256 characters in length.\n"
+            "The following is a conversation with an AI chatbot designed to act as a(n) {r}.{t}{l}\n"
             "\n"
             "{h}Hello, who are you?\n"
             "{a}I am an AI created by {c}. What do you want to talk about?\n"
@@ -56,7 +67,8 @@ class ChatGptBot:
             a=self.ai_prefix,
             t=ai_traits_string,
             c=ai_creator,
-            r=role)
+            r=role,
+            l=length_substring)
         
         # Initialize model parameters
         self.temperature = temperature
@@ -75,6 +87,14 @@ class ChatGptBot:
     # I assume 2 here so that the estimate is almost certain to be higher than reality
     def estimate_tokens(self, input_string):
         return math.ceil(len(input_string)/2)
+    
+    class ErrorCode(Enum):
+        ERR_NONE = 0
+        ERR_CONVO_TOO_LONG = 1
+        ERR_INVALID_REQUEST = 2
+        ERR_SERVICE_UNAVAILABLE = 3
+        ERR_API = 4
+        ERR_RATE_LIMIT = 5
     
     # A function to run a basic GPT-3 text completion task on a string and return the resulting string
     def gpt3_completion(
@@ -103,7 +123,7 @@ class ChatGptBot:
         except openai.error.RateLimitError:
             return None
     
-    # A function to send a new message to the chatbot and returns it's response
+    # A function to send a new message to the chatbot and returns it's response plus an error code
     # This function adds the interaction to the running chat log stored in self.chat_string
     # This is usually the only function that needs to be used
     def chat(self, message):
@@ -115,7 +135,7 @@ class ChatGptBot:
         
         prompt_token_estimate = self.current_tokens + self.estimate_tokens(message + self.ai_prefix)
         if prompt_token_estimate > self.model_max_tokens:
-            return "[ERROR] The conversation is already too long."
+            return ("[ERROR] The conversation is already too long.", self.ErrorCode.ERR_CONVO_TOO_LONG)
         
         try:
             gpt_response = self.gpt3_completion(
@@ -126,13 +146,13 @@ class ChatGptBot:
                 presence_penalty=self.presence_penalty
             )
         except openai.error.InvalidRequestError:
-            return "[ERROR] The conversation is either too long, or that last message was too short/messed up for GPT-3 to cope with."
+            return ("[ERROR] The conversation is either too long, or that last message was too short/messed up for GPT-3 to cope with.", self.ErrorCode.ERR_INVALID_REQUEST)
         except openai.error.ServiceUnavailableError:
-            return "[ERROR] The server is overloaded or not ready yet! Please try again later."
+            return ("[ERROR] The server is overloaded or not ready yet! Please try again later.", self.ErrorCode.ERR_SERVICE_UNAVAILABLE)
         except openai.error.APIError:
-            return "[ERROR] An error occurred with the OpenAI servers! Please try again later."
+            return ("[ERROR] An error occurred with the OpenAI servers! Please try again later.", self.ErrorCode.ERR_API)
         if gpt_response == None:
-            return "[ERROR] API rate limit exceeded! Please try again later."
+            return ("[ERROR] API rate limit exceeded! Please try again later.", self.ErrorCode.ERR_RATE_LIMIT)
         gpt_response = gpt_response.strip()
         
         self.chat_string = "{p}{g}\n{h}".format(
@@ -141,7 +161,7 @@ class ChatGptBot:
             h=self.human_prefix
         )
             
-        return gpt_response
+        return (gpt_response, self.ErrorCode.ERR_NONE)
     
     # Calculates the current cumulative cost of running this chatbot in USD
     def get_cost(self):
@@ -180,7 +200,8 @@ def create_toxic_bot():
             "loves to swear profusely"
         ],
         role="offensive internet troll",
-        ai_creator="the infamous Minecraft griefer popbob (popbob is a transgender female BTW)"
+        ai_creator="the infamous Minecraft griefer popbob (popbob is a transgender female BTW)",
+        max_response_length=200
     )
 
 chatbot = create_toxic_bot()
