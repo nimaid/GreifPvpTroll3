@@ -2,6 +2,7 @@ import math
 import openai
 import json
 from enum import Enum
+import tenacity as tc
 
 # Configuration filenames
 openai_creds_filename = "openai_creds.json"
@@ -26,7 +27,7 @@ class ChatGptBot:
         traits=["helpful", "creative", "clever", "very friendly"],
         role="assistant",
         ai_creator="OpenAI",
-        max_response_length=None,
+        max_response_length=None, # May not be respected in all cases
         temperature=0.9,
         frequency_penalty=0,
         presence_penalty=0.6,
@@ -95,6 +96,7 @@ class ChatGptBot:
         ERR_SERVICE_UNAVAILABLE = 3
         ERR_API = 4
         ERR_RATE_LIMIT = 5
+        ERR_RETRY_FAIL = 6
     
     # A function to run a basic GPT-3 text completion task on a string and return the resulting string
     def gpt3_completion(
@@ -125,7 +127,7 @@ class ChatGptBot:
     
     # A function to send a new message to the chatbot and returns it's response plus an error code
     # This function adds the interaction to the running chat log stored in self.chat_string
-    # This is usually the only function that needs to be used
+    # This is prone to failures that can be fixed with retries
     def chat(self, message):
         this_prompt = "{c}{m}\n{a}".format(
             c=self.chat_string,
@@ -146,7 +148,7 @@ class ChatGptBot:
                 presence_penalty=self.presence_penalty
             )
         except openai.error.InvalidRequestError:
-            return ("[ERROR] The conversation is either too long, or that last message was too short/messed up for GPT-3 to cope with.", self.ErrorCode.ERR_INVALID_REQUEST)
+            return ("[ERROR] The conversation is either too long, or that last message was too messed up for GPT-3 to cope with.", self.ErrorCode.ERR_INVALID_REQUEST)
         except openai.error.ServiceUnavailableError:
             return ("[ERROR] The server is overloaded or not ready yet! Please try again later.", self.ErrorCode.ERR_SERVICE_UNAVAILABLE)
         except openai.error.APIError:
@@ -162,6 +164,50 @@ class ChatGptBot:
         )
             
         return (gpt_response, self.ErrorCode.ERR_NONE)
+    
+    # A function to use the chat() function in a more reliable manor, with fewer failures
+    # This function uses random exponential backoff to retry the chat() command for errors that can be fixed with retries
+    # It also attempts to use some workarounds to tweak the input message to be acceptable for the OpenAI API
+    # It has a limit on how many times to retry the function
+    def chat_retry(self, message, max_tries=6):
+        @tc.retry(wait=tc.wait_random_exponential(min=1, max=60), stop=tc.stop_after_attempt(max_tries))
+        def chat_with_backoff(in_message):
+            response, error = self.chat(in_message)
+            
+            # If the message may have been too short, try lengthening it with spaces
+            if error == self.ErrorCode.ERR_INVALID_REQUEST:
+                in_message += " "*16
+                # Manually retry it now
+                response, error = self.chat(in_message)
+                # If it still has the same error, assume it's hopeless and return
+                if error == self.ErrorCode.ERR_INVALID_REQUEST:
+                    return (response, error)
+            
+            # If it was a normal success, return
+            if error == self.ErrorCode.ERR_NONE:
+                return (response, error)
+            
+            # If there is no chance of a retry or modification helping, return
+            if error in [
+                self.ErrorCode.ERR_CONVO_TOO_LONG
+            ]:
+                return (response, error)
+            
+            # If the issue is definitely temporary, raise an exception so that it can be retried
+            if error in [
+                self.ErrorCode.ERR_SERVICE_UNAVAILABLE,
+                self.ErrorCode.ERR_API,
+                self.ErrorCode.ERR_RATE_LIMIT
+            ]:
+                raise Exception
+            
+        # Run it
+        try:
+            response, error = chat_with_backoff(message)
+        except:
+            response = "[ERROR] Failed to get a response from GPT-3 after {} attempts. Please try again later.".format(max_tries)
+            error = self.ErrorCode.ERR_RETRY_FAIL
+        return (response, error)
     
     # Calculates the current cumulative cost of running this chatbot in USD
     def get_cost(self):
