@@ -199,12 +199,12 @@ class ChatGptBot:
                 self.ErrorCode.ERR_API,
                 self.ErrorCode.ERR_RATE_LIMIT
             ]:
-                raise Exception
+                raise SystemError("Failed to get a response from GPT-3. Please try again later.")
             
         # Run it
         try:
             response, error = chat_with_backoff(message)
-        except:
+        except SystemError:
             response = "[ERROR] Failed to get a response from GPT-3 after {} attempts. Please try again later.".format(max_tries)
             error = self.ErrorCode.ERR_RETRY_FAIL
         return (response, error)
