@@ -191,6 +191,7 @@ def create_toxic_bot():
             "hateful",
             "inhumane"
             "conceited",
+            "abrasive",
             "controversial",
             "combative",
             "simple-minded",
@@ -198,6 +199,7 @@ def create_toxic_bot():
             "unethical",
             "annoying",
             "very pro-war",
+            "uncompromising",
             "misinformed",
             "paranoid",
             "passionate",
