@@ -47,7 +47,7 @@ class ChatGptBot:
         else:
             ai_traits_string += ", ".join(traits[:-1]) + ", and " + traits[-1] + "."
         # Compose response length substring
-        length_substring = " The AI responds with messages that are less than {l} characters in length."
+        length_substring = " The AI responds with messages that are always less than {l} characters long."
         if max_response_length == None:
             length_substring = ""
         else:
