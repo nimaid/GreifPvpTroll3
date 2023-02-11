@@ -28,7 +28,9 @@ class ChatGptBot:
         self,
         traits=["helpful", "creative", "clever", "very friendly"],
         role="assistant",
-        ai_creator="OpenAI",
+        creator="OpenAI",
+        age=None,
+        gender=None,
         max_response_length=None, # May not be respected in all cases
         temperature=0.9,
         frequency_penalty=0,
@@ -42,13 +44,13 @@ class ChatGptBot:
         self.ai_prefix = "AI: "
         
         # Compose traits substring
-        ai_traits_string = " The AI is "
+        traits_string = " The AI is "
         if len(traits) == 0:
-            ai_traits_string = ""
+            traits_string = ""
         elif len(traits) == 1:
-            ai_traits_string += traits[0] + "."
+            traits_string += traits[0] + "."
         else:
-            ai_traits_string += ", ".join(traits[:-1]) + ", and " + traits[-1] + "."
+            traits_string += ", ".join(traits[:-1]) + ", and " + traits[-1] + "."
         # Compose response length substring
         length_substring = " The AI always responds with messages that are strictly less than {l} characters long."
         if max_response_length == None:
@@ -58,9 +60,19 @@ class ChatGptBot:
                 length_substring = ""
             else:
                 length_substring = length_substring.format(l=max_response_length)
+        # Compose age and gender substring
+        age_gender_substring = " The AI speaks like a(n)"
+        if age == None and gender == None:
+            age_gender_substring = ""
+        else:
+            if age != None:
+                age_gender_substring += " {}-year-old".format(age)
+            if gender != None:
+                age_gender_substring += " {}".format(gender)
+            age_gender_substring += "."
         # Compose prompt start
         prompt_start = (
-            "The following is a conversation with an AI chatbot who is a(n) {r}.{t}{l}\n"
+            "The following is a conversation with an AI chatbot who is a(n) {r}.{t}{ag}{l}\n"
             "\n"
             "{h}Hello, who are you?\n"
             "{a}I am an AI created by {c}. What do you want to talk about?\n"
@@ -68,10 +80,11 @@ class ChatGptBot:
         ).format(
             h=self.human_prefix,
             a=self.ai_prefix,
-            t=ai_traits_string,
-            c=ai_creator,
+            t=traits_string,
+            c=creator,
             r=role,
-            l=length_substring)
+            l=length_substring,
+            ag=age_gender_substring)
         
         # Initialize model parameters
         self.temperature = temperature
@@ -247,7 +260,6 @@ def create_toxic_bot():
             "mean-spirited",
             "hateful",
             "inhumane",
-            "conceited",
             "abrasive",
             "controversial",
             "combative",
@@ -280,10 +292,13 @@ def create_toxic_bot():
             "calls people cunts as both an insult and a term of endearment"
         ],
         role="offensive internet troll and conceited Minecraft hacker",
-        ai_creator="the infamous Minecraft hacker popbob (popbob is a transgender female BTW)",
+        creator="the infamous Minecraft hacker popbob (popbob is a transgender female BTW)",
+        age=13,
+        gender="male",
         max_response_length=200
     )
 
+'''
 # Minecraft server_options
 mc_bot_optons = {
     "host": "localhost",
@@ -298,12 +313,13 @@ mc_bot = mineflayer.createBot(mc_bot_optons)
 help_message = "I'm GPT-3, and I'm ready to talk! Type \"ai:help\" to get started."
 js.once(mc_bot, 'spawn')
 mc_bot.chat(help_message)
-
+'''
 
 
 # Create a chatbot
 chatbot = create_toxic_bot()
 
+'''
 # Respond to all messages
 @js.On(mc_bot, "chat")
 def onChat(this, user, message, *rest):
@@ -314,3 +330,4 @@ def onChat(this, user, message, *rest):
     response, error = chatbot.chat_retry(message)
     reply = "[{u}]> {r}".format(u=user, r=response)
     mc_bot.chat(reply)
+'''
