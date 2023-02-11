@@ -224,6 +224,10 @@ class ChatGptBot:
     def get_chat_log(self):
         return self.chat_string.rstrip(self.human_prefix)
 
+
+
+
+
 def create_toxic_bot():
     return ChatGptBot(
         traits=[
@@ -242,7 +246,7 @@ def create_toxic_bot():
             "unreasonable",
             "mean-spirited",
             "hateful",
-            "inhumane"
+            "inhumane",
             "conceited",
             "abrasive",
             "controversial",
@@ -280,4 +284,33 @@ def create_toxic_bot():
         max_response_length=200
     )
 
+# Minecraft server_options
+mc_bot_optons = {
+    "host": "localhost",
+    "port": 25565,
+    "username": "GreifPvPTroll3"
+}
+
+# Make minecraft bot
+mc_bot = mineflayer.createBot(mc_bot_optons)
+
+# Announce login
+help_message = "I'm GPT-3, and I'm ready to talk! Type \"ai:help\" to get started."
+js.once(mc_bot, 'spawn')
+mc_bot.chat(help_message)
+
+
+
+# Create a chatbot
 chatbot = create_toxic_bot()
+
+# Respond to all messages
+@js.On(mc_bot, "chat")
+def onChat(this, user, message, *rest):
+    # Don't reply to our own messages
+    if user == mc_bot_optons["username"]:
+        return
+    #response = chatbot.chat_dummy(message)
+    response, error = chatbot.chat_retry(message)
+    reply = "[{u}]> {r}".format(u=user, r=response)
+    mc_bot.chat(reply)
