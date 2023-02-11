@@ -50,7 +50,7 @@ class ChatGptBot:
         else:
             ai_traits_string += ", ".join(traits[:-1]) + ", and " + traits[-1] + "."
         # Compose response length substring
-        length_substring = " The AI responds with messages that are always less than {l} characters long."
+        length_substring = " The AI always responds with messages that are strictly less than {l} characters long."
         if max_response_length == None:
             length_substring = ""
         else:
@@ -60,7 +60,7 @@ class ChatGptBot:
                 length_substring = length_substring.format(l=max_response_length)
         # Compose prompt start
         prompt_start = (
-            "The following is a conversation with an AI chatbot designed to act as a(n) {r}.{t}{l}\n"
+            "The following is a conversation with an AI chatbot who is a(n) {r}.{t}{l}\n"
             "\n"
             "{h}Hello, who are you?\n"
             "{a}I am an AI created by {c}. What do you want to talk about?\n"
@@ -308,7 +308,7 @@ chatbot = create_toxic_bot()
 @js.On(mc_bot, "chat")
 def onChat(this, user, message, *rest):
     # Don't reply to our own messages
-    if user == mc_bot_optons["username"]:
+    if user == mc_bot.username:
         return
     #response = chatbot.chat_dummy(message)
     response, error = chatbot.chat_retry(message)
