@@ -3,6 +3,8 @@ import openai
 import json
 from enum import Enum
 import tenacity as tc
+import javascript as js
+mineflayer = js.require('mineflayer')
 
 # Configuration filenames
 openai_creds_filename = "openai_creds.json"
@@ -208,6 +210,11 @@ class ChatGptBot:
             response = "[ERROR] Failed to get a response from GPT-3 after {} attempts. Please try again later.".format(max_tries)
             error = self.ErrorCode.ERR_RETRY_FAIL
         return (response, error)
+    
+    # A dummy function that basically repeats the input message
+    # Useful for testing the chatbot without actually doing text completion
+    def chat_dummy(self, message):
+        return "Only dumb people say \"{}\", lol.".format(message)
     
     # Calculates the current cumulative cost of running this chatbot in USD
     def get_cost(self):
